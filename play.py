@@ -75,11 +75,12 @@ def greedy_rollout(agent, environment, start_state, max_steps=1000):
     return positions, "timeout", total_reward
 
 
-def animate(rollouts, track_map, labels, save_gif=None, show=False, interval=120):
+def animate(rollouts, track_maps, labels, save_gif=None, show=False, interval=120):
     """
-    rollouts : list of (positions, status, total_reward)
-    Renders each rollout on its own copy of the track, side by side, with a
-    marker moving along the recorded path.
+    rollouts   : list of (positions, status, total_reward)
+    track_maps : list of np.ndarray, one track per rollout (same order)
+    Renders each rollout on its own track, side by side, with a marker moving
+    along the recorded path.
     """
     n = len(rollouts)
     fig, axes = plt.subplots(1, n, figsize=(5 * n, 5), squeeze=False)
@@ -89,7 +90,7 @@ def animate(rollouts, track_map, labels, save_gif=None, show=False, interval=120
     trails = []
     max_len = max(len(r[0]) for r in rollouts)
 
-    for ax, (positions, status, total_reward), label in zip(axes, rollouts, labels):
+    for ax, (positions, status, total_reward), track_map, label in zip(axes, rollouts, track_maps, labels):
         ax.imshow(track_map, cmap="GnBu", origin="upper")
         ax.set_xticks([])
         ax.set_yticks([])
@@ -144,6 +145,7 @@ def main():
     labels = args.labels or [m.get("run_name") or p for (_, m), p in zip(agents_meta, args.weights)]
 
     rollouts = []
+    track_maps = []
     for (agent, meta), label in zip(agents_meta, labels):
         track = args.track or meta.get("track") or "a"
         track_map = build_track(track)
@@ -157,13 +159,11 @@ def main():
         positions, status, total_reward = greedy_rollout(
             agent, environment, start_state, max_steps=args.max_steps
         )
-        print(f"{label}: {status}, reward={total_reward}, steps={len(positions)}")
+        print(f"{label}: track={track}, {status}, reward={total_reward}, steps={len(positions)}")
         rollouts.append((positions, status, total_reward))
+        track_maps.append(track_map)  # each agent is drawn on its own track
 
-    # all agents are compared on the same track (the first agent's track)
-    first_track = args.track or agents_meta[0][1].get("track") or "a"
-    track_map = build_track(first_track)
-    animate(rollouts, track_map, labels, save_gif=args.save_gif, show=args.show)
+    animate(rollouts, track_maps, labels, save_gif=args.save_gif, show=args.show)
 
 
 if __name__ == "__main__":
