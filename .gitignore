@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# wandb run logs
+wandb/
+
+# generated animations
+*.gif
+
+# OS
+.DS_Store
+
+# Local Claude Code settings
+.claude/
+
+# Keep the weights/ directory but ignore the (potentially large) weight files.
+# Remove the line below if you want to commit trained weights for reproducibility.
+weights/*.npz
+!weights/.gitkeep
